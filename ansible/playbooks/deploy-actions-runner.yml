@@ -7,7 +7,7 @@
     runner_count: "{{ lookup('env', 'RUNNER_COUNT') }}"
     runner_token: "{{ lookup('env', 'RUNNER_TOKEN') }}"
     runner_names: "{{ lookup('env', 'RUNNER_NAMES').split(',') | map('trim') | list }}"
-    gh_org: "https://github.com/blavogiez-org"
+    gh_org: "https://github.com/jobacogiez-org"
   tasks:  
     - name: Téléchargement d'un dossier gh runner (procedure officielle gh)
       ansible.builtin.shell: 

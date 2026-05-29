@@ -1,10 +1,9 @@
-resource "proxmox_virtual_environment_network_linux_vlan" "this" {
+resource "proxmox_network_linux_bridge" "this" {
   node_name = var.node_name
 
-  name      = var.name
-  interface = var.interface
-  vlan      = var.vlan_id
-  address   = var.address
+  name    = var.name
+  ports   = ["${var.interface}.${var.vlan_id}"]
+  address = var.address
 
   comment = var.comment
 }

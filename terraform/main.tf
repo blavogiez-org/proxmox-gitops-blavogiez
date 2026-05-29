@@ -1,7 +1,7 @@
 module "vlan1" {
   source = "./modules/vlan"
 
-  name      = "vlan1"
+  name      = "vmbr1"
   vlan_id   = 1
   interface = var.proxmox_interface
   node_name = "homelab"
@@ -12,7 +12,7 @@ module "vlan1" {
 module "vlan2" {
   source = "./modules/vlan"
 
-  name      = "vlan2"
+  name      = "vmbr2"
   vlan_id   = 2
   interface = var.proxmox_interface
   node_name = "homelab"
@@ -22,4 +22,24 @@ module "vlan2" {
 
 module "minimal-backup" {
   source = "./modules/backup"
+
+}
+
+module "gh-runner" {
+  source = "./modules/vm"
+
+  name                = "gh-runner"
+  username            = "admin"
+  node_name           = "homelab"
+  vm_id               = 120
+  vm_template_id      = 9000
+  vm_ip               = "192.168.10.11"
+  network_gateway     = "192.168.10.1"
+  ssh_public_key_path = var.ssh_public_key_path
+
+  cpu       = 2
+  memory    = 4096
+  disk_size = 10
+
+  bridge = module.vlan1.bridge_name
 }

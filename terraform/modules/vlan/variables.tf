@@ -5,7 +5,7 @@ variable "node_name" {
 
 variable "name" {
   type        = string
-  description = "Nom de l'interface VLAN (ex: vlan10, internal, etc.)."
+  description = "Nom du bridge Linux Proxmox cree pour ce VLAN (ex: vmbr1)."
 }
 
 variable "interface" {

@@ -1,0 +1,55 @@
+# https://hub.docker.com/r/bridgecrew/checkov/tags
+
+# https://github.com/terraform-linters/tflint/pkgs/container/tflint
+
+# https://hub.docker.com/r/hadolint/hadolint
+# https://github.com/hadolint/hadolint-action
+
+# on fait en docker car les runners self hosted peuvent différer de packages
+---
+name: Analyse statique du dépôt
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # 2 jobs séparés pour parallélisme et indépendance
+  static-analysis-checkov:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      # on monte simplement le dépôt en bind mount
+      # quiet pour montrer que les échecs
+      - name: Analyse checkov
+        run: |
+          docker run --rm -v "$PWD:/repo" bridgecrew/checkov:2 -d /repo --quiet
+
+  static-analysis-tflint:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      # on monte simplement le dépôt en bind mount
+      - name: Analyse TFLint
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/terraform-linters/tflint:latest --recursive
+
+  static-analysis-hadolint:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      # il cherchera tous les fichiers du dépôt s'appelant exactement Dockerfile. Si on les appelle autrement (Dockerfile.prod, etc), un find serait meilleur. Ici je fais au plus simple car je nomme mes dockerfile comme tel
+      - name: Analyse Hadolint
+        continue-on-error: true
+        uses: hadolint/hadolint-action@v3.3.0
+        with:
+          dockerfile: Dockerfile
+          recursive: true
+          no-fail: true
+      # no fail car si y'a aucun dockerfile il va rater, alors que pas tous les dépôts en ont

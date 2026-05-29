@@ -37,5 +37,9 @@ variable "proxmox_ssh_private_key_path" {
   description = "Chemin de la cle privee SSH pour le node Proxmox."
   type        = string
   default     = "~/.ssh/proxmox_terraform"
-  nullable    = true
+}
+
+variable "ssh_public_key_path" {
+  description = "Chemin de la cle publique SSH a injecter dans la VM."
+  type        = string
 }
