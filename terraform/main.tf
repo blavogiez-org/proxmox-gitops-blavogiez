@@ -51,7 +51,7 @@ module "wireguard" {
   lxc_ip              = "192.168.10.12"
   network_gateway     = "192.168.10.1"
   ssh_public_key_path = var.ssh_public_key_path
-  template_file_id    = "local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst"
+  template_file_id    = var.template_file_id
 
   cpu       = 1
   memory    = 2048
