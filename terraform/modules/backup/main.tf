@@ -6,7 +6,7 @@ resource "proxmox_backup_job" "daily_backup" {
   mode     = "snapshot"
   compress = "zstd"
 
-  prune_backups {
-    keep_last = 2
+  prune_backups = {
+    keep-last = "2"
   }
 }

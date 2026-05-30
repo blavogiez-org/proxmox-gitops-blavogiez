@@ -8,6 +8,7 @@ terraform/backend.tf
 terraform/tfplan
 .gitops/
 *lock*hcl*
+*state*lock*
 
 # Secrets
 *.key
