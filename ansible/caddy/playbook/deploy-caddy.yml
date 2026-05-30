@@ -1,0 +1,56 @@
+- hosts: all
+  become: true
+  vars:
+    caddy_remote_dir: "/opt/caddy"
+    caddy_local_dir: "../caddy"
+
+  tasks:
+    - name: S'assurer que les répertoires existent
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ caddy_remote_dir }}"
+        - "{{ caddy_remote_dir }}/sites"
+
+    - name: Copier les fichiers Docker (Dockerfile, compose)
+      ansible.builtin.copy:
+        src: "{{ caddy_local_dir }}/{{ item }}"
+        dest: "{{ caddy_remote_dir }}/{{ item }}"
+        mode: '0644'
+      loop:
+        - Dockerfile
+        - docker-compose.yml
+      register: docker_files
+
+    - name: Copier les fichiers de configuration (Caddyfile, sites)
+      ansible.builtin.copy:
+        src: "{{ caddy_local_dir }}/{{ item }}"
+        dest: "{{ caddy_remote_dir }}/{{ item }}"
+        mode: '0644'
+      loop:
+        - Caddyfile
+        - sites/
+      register: config_files
+
+    - name: Vérifier si le conteneur Caddy est en cours d'exécution
+      ansible.builtin.command: docker ps --filter "name=caddy" --filter "status=running" -q
+      register: caddy_running
+      changed_when: false
+
+    - name: Reconstruire et redémarrer Caddy (si Dockerfile a changé ou si éteint)
+      community.docker.docker_compose_v2:
+        project_src: "{{ caddy_remote_dir }}"
+        build: always
+        state: present
+      when: docker_files.changed or caddy_running.stdout == ""
+
+    - name: Recharger la configuration Caddy à chaud (si config a changé et Dockerfile inchangé)
+      ansible.builtin.command:
+        cmd: docker exec caddy caddy reload --config /etc/caddy/Caddyfile
+      when: 
+        - config_files.changed 
+        - not docker_files.changed
+        - caddy_running.stdout != ""
+
