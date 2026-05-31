@@ -79,20 +79,4 @@ module "caddy" {
 }
 
 
-module "kanboard" {
-  source = "./modules/lxc"
-
-  name                = "kanboard"
-  node_name           = "homelab"
-  lxc_id              = 114
-  lxc_ip              = "192.168.10.14"
-  network_gateway     = "192.168.10.1"
-  ssh_public_key_path = var.ssh_public_key_path
-
-  cpu       = 1
-  memory    = 2048
-  disk_size = 10
-
-  bridge = module.vlan1.bridge_name
-}
 

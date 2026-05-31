@@ -15,11 +15,6 @@ variable "proxmox_insecure" {
   default     = true
 }
 
-variable "proxmox_ssh_agent" {
-  description = "Utilise ssh-agent au lieu d'une cle privee explicite."
-  type        = bool
-  default     = false
-}
 
 variable "proxmox_ssh_username" {
   description = "Utilisateur SSH sur le node Proxmox. Requis pour uploader les snippets/hook scripts."
