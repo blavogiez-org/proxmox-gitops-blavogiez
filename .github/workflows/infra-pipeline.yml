@@ -1,4 +1,4 @@
-name: "Deployment intelligent et complet"
+name: "Mise à jour de l'infra"
 
 on:
   push:
@@ -33,6 +33,7 @@ jobs:
           recursive: true
 
   terraform:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     needs: [ static-analysis-checkov, static-analysis-tflint, static-analysis-hadolint ]
     runs-on: self-hosted
     steps:
@@ -41,68 +42,33 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Prepare SSH Key for Terraform
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PROXMOX_SSH_PRIVATE_KEY }}" > ~/.ssh/proxmox_tf_key
-          chmod 600 ~/.ssh/proxmox_tf_key
-
-      - name: Prepare Public SSH Key
-        run: |
-          echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/proxmox_vm_public.pub
-
       - name: Terraform Init
         run: terraform -chdir=terraform init
 
       - name: Terraform Validate
         run: terraform -chdir=terraform validate
 
-      - name: Terraform Plan & Safety Check
-        id: plan
+      - name: setup du secret terraform tfvars (evite d'avoir trop de variables)
         run: |
-          # Génération du plan dans un fichier binaire
-          terraform -chdir=terraform plan -out=tfplan
-          
-          # Analyse du plan pour détecter des suppressions (destroy)
-          # On utilise -json pour une analyse fiable via jq (souvent présent sur les runners)
-          # Ou un grep robuste sur la sortie texte si jq n'est pas là.
-          
-          PLAN_OUTPUT=$(terraform -chdir=terraform show -no-color tfplan)
-          
-          if echo "$PLAN_OUTPUT" | grep -E "to destroy|destroying"; then
-            echo "::error::❌ SÉCURITÉ : Le plan prévoit de supprimer des ressources ! Déploiement stoppé."
-            echo "$PLAN_OUTPUT" | grep -E "destroying|to destroy"
-            exit 1
-          else
-            echo "✅ Aucun risque de destruction détecté."
-          fi
-        env:
-          TF_VAR_proxmox_api_token: ${{ secrets.PROXMOX_API_TOKEN }}
-          TF_VAR_proxmox_endpoint: ${{ secrets.PROXMOX_ENDPOINT }}
-          TF_VAR_proxmox_insecure: ${{ secrets.PROXMOX_INSECURE }}
-          TF_VAR_proxmox_ssh_username: ${{ secrets.PROXMOX_SSH_USERNAME }}
-          TF_VAR_storage: ${{ secrets.PROXMOX_STORAGE }}
-          TF_VAR_proxmox_ssh_private_key_path: ~/.ssh/proxmox_tf_key
-          TF_VAR_ssh_public_key_path: ~/.ssh/proxmox_vm_public.pub
+          umask 077
+          cat > terraform/ci.auto.tfvars <<'EOF'
+          ${{ secrets.TERRAFORM_TFVARS }}
+          EOF
 
-      - name: Terraform Apply
-        run: terraform -chdir=terraform apply -auto-approve tfplan
-        env:
-          TF_VAR_proxmox_api_token: ${{ secrets.PROXMOX_API_TOKEN }}
-          TF_VAR_proxmox_endpoint: ${{ secrets.PROXMOX_ENDPOINT }}
-          TF_VAR_proxmox_insecure: ${{ secrets.PROXMOX_INSECURE }}
-          TF_VAR_proxmox_ssh_username: ${{ secrets.PROXMOX_SSH_USERNAME }}
-          TF_VAR_storage: ${{ secrets.PROXMOX_STORAGE }}
-          TF_VAR_proxmox_ssh_private_key_path: ~/.ssh/proxmox_tf_key
-          TF_VAR_ssh_public_key_path: ~/.ssh/proxmox_vm_public.pub
+      # un plan, pas encore de apply ou quoi, ce serait plus complexe et sera géré après, avec backend distant et étude d'autres outils
+      - name: Terraform Plan
+        run: |
+          terraform -chdir=terraform plan -no-color
+      # dans tous les cas même après ça fonctionnera par un principe de PR, jamais de apply
 
   ansible:
-    needs: [ terraform ]
+    if: ${{ github.event_name == 'push' }}
+    needs: [ static-analysis-checkov, static-analysis-tflint, static-analysis-hadolint ]
     runs-on: self-hosted
     strategy:
       fail-fast: false
       matrix:
-        service: [ "caddy", "actions-runner" ]
+        service: [ "caddy" ]
     steps:
       - uses: actions/checkout@v4
 
@@ -123,11 +89,13 @@ jobs:
           pipx install ansible-core || echo "Ansible déjà installé"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Install Ansible Collections
+      - name: Install Ansible Collections(on a du docker compose community)
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           ansible-galaxy collection install -r ansible/requirements.yml
 
+      #https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
+      # avec la matrix tous les services définis vont faire N déplooiements ansible
       - name: "Déploiement de ${{ matrix.service }}"
         run: |
           export PATH="$HOME/.local/bin:$PATH"

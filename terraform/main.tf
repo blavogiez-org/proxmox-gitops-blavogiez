@@ -73,7 +73,7 @@ module "caddy" {
 
   cpu       = 3
   memory    = 1024
-  disk_size = 5
+  disk_size = 10
 
   bridge = module.vlan1.bridge_name
 }
