@@ -71,8 +71,8 @@ module "caddy" {
   network_gateway     = "192.168.10.1"
   ssh_public_key_path = var.ssh_public_key_path
 
-  cpu       = 1
-  memory    = 512
+  cpu       = 3
+  memory    = 1024
   disk_size = 5
 
   bridge = module.vlan1.bridge_name
