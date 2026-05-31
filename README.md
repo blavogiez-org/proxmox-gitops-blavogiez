@@ -1,6 +1,6 @@
 # Configuration d'une infrastructure Proxmox
 
-**Fork personnalisé à une base commune développée avec Jonas Facon, camarade de BUT.**
+**Fork personnalisé d'une [base commune développée avec Jonas Facon, camarade de BUT](github.com/jobacogiez-org/proxmox-gitops).**
 
 ## Informations de développement
 
@@ -8,7 +8,7 @@ La base commune est développée et maintenue par **Baptiste Lavogiez** et **Jon
 
 Notre projet commun a vocation à être la source commune de nos infrastructures Proxmox personnelles (templates, outils d'administration type VPN...). Puisqu'ayant chacun un serveur avec des besoins et services différents, ce dépôt est forké par chacun.
 
-En l'occurence, je prévois de déployer des services tels que Kanboard, Nextcloud, Vaultwarden et Uptime Kuma.
+En l'occurrence, je prévois de déployer des services tels que Kanboard, Nextcloud, Vaultwarden et Uptime Kuma.
 
 Puisque le dépôt doit être public, et pour que les workflows le soient aussi, nous restons sur GitHub par simplicité. 
 
@@ -23,9 +23,11 @@ Ce projet privilégie une approche Infrastructure as Code et similaire aux princ
 
 ## Conventions de développement
 
-Puisqu'il s'agit d'un projet commun, nous avons défini quelques règles :
-- 
-
+Puisqu'il s'agit d'un projet commun, nous définissons ces conventions :
+- Limiter le développement par IA afin d'apprendre au mieux, n'utiliser que pour se documenter / review
+- Lorsque l'on utilise un nouvel outil, se renseigner rapidement sur les bonnes pratiques
+- Appliquer les principes [DRY, KISS, YAGNI](https://scalastic.io/solid-dry-kiss/)
+- [Feature branch](https://www.atlassian.com/fr/git/tutorials/comparing-workflows/feature-branch-workflow) et merge requests (lorsque le dépôt deviendra plus complexe)
 
 ## Présentation
 
