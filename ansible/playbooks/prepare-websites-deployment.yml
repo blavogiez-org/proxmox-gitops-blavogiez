@@ -7,6 +7,7 @@
     build_remote_dir: "/var/www/build/{{ caller_repository }}"
     sites_remote_dir: "{{ caddy_remote_dir }}/sites/{{ caller_repository }}"
     sites_remote_file: "{{ caddy_remote_dir }}/sites/{{ caller_repository }}.conf"
+    website_domains: "{{ websites | map(attribute='domains') | flatten | unique | list }}"
 
   tasks:
     - name: Supprimer l'ancien déploiement du dépôt
@@ -18,6 +19,12 @@
         - "{{ build_remote_dir }}"
         - "{{ sites_remote_dir }}"
         - "{{ sites_remote_file }}"
+
+    - name: Supprimer les anciennes configurations Caddy à plat des domaines
+      ansible.builtin.file:
+        path: "{{ caddy_remote_dir }}/sites/{{ item }}.conf"
+        state: absent
+      loop: "{{ website_domains }}"
 
     - name: S'assurer que les répertoires existent
       ansible.builtin.file:
